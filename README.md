@@ -36,7 +36,7 @@ Variables opcionales:
 
 El juez reparte el presupuesto del prompt entre contexto (25 %) y ambas propuestas, por lo que ninguna propuesta desaparece por un truncamiento global. Las salidas que excedan el límite se marcan como truncadas.
 
-En Windows, los CLIs `.cmd` se invocan mediante `cmd.exe` con argumentos escapados; no se ejecuta una cadena de comando configurable directamente en el shell.
+En Windows, los ejecutables se invocan directamente. Solo los CLIs configurados como `.cmd` o `.bat` se ejecutan mediante `cmd.exe` con argumentos escapados; no se ejecuta una cadena de comando configurable directamente en el shell.
 
 ## Pruebas
 

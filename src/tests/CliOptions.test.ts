@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { parseCliOptions, positiveIntegerFromEnv } from "../input/CliOptions";
 import { buildAnalysisPrompt, buildJudgePrompt } from "../consensus/ConsensusAgent";
+import { CommandAgent } from "../agents/CommandAgent";
 
 test("parseCliOptions accepts repeated files", () => {
   assert.deepEqual(parseCliOptions(["--problem", "Revisar", "--file", "a.ts", "--file", "b.ts", "--out", "result.md"]), {
@@ -35,4 +36,16 @@ test("judge prompt gives both proposals a bounded allocation", () => {
 test("analysis prompt stays within its configured maximum", () => {
   const prompt = buildAnalysisPrompt("rol", "problema", "c".repeat(500), 100);
   assert.ok(prompt.length <= 100);
+});
+
+test("CommandAgent executes a Windows executable without cmd.exe", async () => {
+  const agent = new CommandAgent("Node", {
+    command: process.execPath,
+    args: ["--version"],
+    timeoutMs: 5_000,
+    maxOutputChars: 1_000
+  });
+  const result = await agent.run({ problem: "", context: "", prompt: "", workingDirectory: process.cwd() });
+  assert.equal(result.exitCode, 0);
+  assert.match(result.stdout, /^v\d+/);
 });

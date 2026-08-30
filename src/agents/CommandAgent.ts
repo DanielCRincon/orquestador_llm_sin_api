@@ -63,7 +63,9 @@ export class CommandAgent implements AgentProvider {
     if (!this.options.command || /[\r\n"&|<>^()%!]/.test(this.options.command)) {
       throw new Error(`${this.name}: el comando configurado contiene caracteres no permitidos.`);
     }
-    if (process.platform !== "win32") return { file: this.options.command, args: this.options.args };
+    if (process.platform !== "win32" || !/\.(cmd|bat)$/i.test(this.options.command)) {
+      return { file: this.options.command, args: this.options.args };
+    }
     const commandLine = `"${this.options.command}" ${this.options.args.map(quoteWindowsArgument).join(" ")}`;
     return { file: process.env.ComSpec || "cmd.exe", args: ["/d", "/s", "/c", commandLine] };
   }
