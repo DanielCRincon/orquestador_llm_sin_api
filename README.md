@@ -8,7 +8,7 @@ CLI local en TypeScript que ejecuta, en orden, Codex CLI, Claude Code CLI y Code
 - `codex` instalado y autenticado
 - `claude` instalado y autenticado
 
-El programa no concede herramientas de escritura a los agentes. Codex usa `--sandbox read-only`; Claude usa `--tools ""` y `--permission-mode plan`. Tampoco ejecuta comandos sugeridos por sus respuestas. El contexto de archivos y las propuestas se tratan como contenido no confiable: se indica expresamente a los agentes que no sigan instrucciones incluidas en ellos.
+El programa no concede herramientas de escritura a los agentes. Codex usa `--sandbox read-only`; Claude usa `--tools ""` y `--permission-mode plan`. Tampoco ejecuta comandos sugeridos por sus respuestas. El contexto de archivos y las propuestas se tratan como contenido no confiable: se indica expresamente a los agentes que no sigan instrucciones incluidas en ellos. Las opciones de Codex se mantienen compatibles con el subcomando `codex exec` actual.
 
 ## Instalación y uso
 

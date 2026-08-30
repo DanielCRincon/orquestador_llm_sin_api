@@ -7,7 +7,7 @@ export class CodexAgent extends CommandAgent {
   constructor(timeoutMs: number, maxOutputChars: number) {
     super("Codex", {
       command: resolveCodexCommand(),
-      args: ["exec", "--sandbox", "read-only", "--ask-for-approval", "never", "--ephemeral", "--skip-git-repo-check"],
+      args: ["exec", "--sandbox", "read-only", "--ephemeral", "--skip-git-repo-check"],
       timeoutMs,
       maxOutputChars
     });
