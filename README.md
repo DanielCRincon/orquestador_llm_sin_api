@@ -28,7 +28,7 @@ npm start -- --problem "Revisa este diseño" --file .\src\a.ts --file .\src\b.ts
 
 Variables opcionales:
 
-- `CODEX_COMMAND` y `CLAUDE_COMMAND`: ejecutable o ruta local del CLI. Por defecto son `codex` y `claude.exe`. Por seguridad no se aceptan comillas, saltos de línea ni metacaracteres de shell.
+- `CODEX_COMMAND` y `CLAUDE_COMMAND`: ejecutable o ruta local del CLI. Codex busca primero una ruta indicada por `CODEX_COMMAND`, después la instalación de la extensión de VS Code en Windows y finalmente `codex` en el `PATH`; Claude usa `claude.exe`. Por seguridad no se aceptan comillas, saltos de línea ni metacaracteres de shell.
 - `AGENT_TIMEOUT_MS`: entero positivo; por defecto `180000`.
 - `MAX_CONTEXT_CHARS`: entero positivo; por defecto `12000`.
 - `MAX_PROMPT_CHARS`: entero positivo; por defecto `30000`.
