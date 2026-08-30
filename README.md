@@ -4,6 +4,50 @@ CLI local enfocado en código ABAP. Ejecuta Codex CLI y Claude Code CLI en paral
 
 El resultado es una propuesta única de ajuste ABAP, con código listo para revisión. La herramienta no modifica archivos, no se conecta a SAP y no crea transportes: exporta o copia el objeto ABAP a un archivo local antes de analizarlo y luego aplica el cambio mediante tu proceso normal de desarrollo y transporte.
 
+## Inicio rápido
+
+### Primera vez
+
+Abre PowerShell y ejecuta los siguientes comandos. Usa `npm.cmd` para evitar que la política de ejecución de PowerShell bloquee `npm.ps1`.
+
+```powershell
+cd "D:\DOCUMENTOS DANIEL\PROYECTOS\orquestador_llm_sin_api"
+npm.cmd install
+npm.cmd test
+```
+
+Comprueba que los dos agentes están disponibles y autenticados:
+
+```powershell
+codex --version
+claude --version
+```
+
+Si ambos comandos muestran una versión, el proyecto está listo.
+
+### Uso diario
+
+1. Copia o exporta el objeto ABAP/SmartForm que quieras revisar dentro de `abap/`. Esa carpeta no se sube a Git.
+2. Ejecuta el comando siguiente, reemplazando archivo y requerimiento.
+3. Abre el informe creado bajo `reports/` y aplica el cambio manualmente en SAP después de revisarlo.
+
+```powershell
+npm.cmd start -- --problem "Describe aquí el ajuste ABAP que necesitas y pide el bloque de código completo." --file ".\abap\ZCL_EJEMPLO.abap" --out "mi-ajuste.md"
+```
+
+El resultado queda en `reports\mi-ajuste.md`.
+
+### Plantilla para el prompt
+
+Incluye siempre: objeto/método afectado, comportamiento esperado, restricciones de release o sintaxis, y el formato que quieres recibir.
+
+```text
+En el método <MÉTODO> de <OBJETO>, necesito <CAMBIO>.
+Conserva <REGLAS DE NEGOCIO>.
+Compatible con <RELEASE/S4HANA/ECC>.
+Devuelve el bloque ABAP completo que debo reemplazar, riesgos y pruebas.
+```
+
 ## Requisitos
 
 - Node.js 18+ (validado con Node.js 24.19.0 y npm 11.17.0)
