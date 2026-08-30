@@ -44,6 +44,8 @@ En Windows, los CLIs `.cmd` se invocan mediante `cmd.exe` con argumentos escapad
 npm test
 ```
 
+Si PowerShell bloquea `npm.ps1`, usa `npm.cmd` (por ejemplo, `npm.cmd test`) o ejecuta `Set-ExecutionPolicy -Scope Process Bypass` solo para la ventana actual.
+
 Las pruebas cubren el análisis de argumentos, validación de variables de entorno y presupuestos de prompts.
 
 El proyecto usa resolución de módulos `Node16`, compatible con Node.js 18+ y TypeScript 6; no requiere silenciar advertencias de deprecación.

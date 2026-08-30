@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
-    "test": "npm run build && node --test dist/tests"
+    "test": "npm run build && node --test dist/tests/CliOptions.test.js"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
