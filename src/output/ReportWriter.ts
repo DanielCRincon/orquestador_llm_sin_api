@@ -2,9 +2,10 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { dirname, join } from "node:path";
 import { AgentResult } from "../agents/AgentProvider";
+import { extractFinalAnswer } from "../consensus/ConsensusAgent";
 
-export async function writeReport(path: string, problem: string, codex: string, claude: string, judge: string): Promise<void> {
-  const report = `# Multi-Agent Analysis\n\n## Problem\n${problem}\n\n## Codex Analysis\n${codex}\n\n## Claude Analysis\n${claude}\n\n${judge.trim()}\n`;
+export async function writeReport(path: string, problem: string, judge: string): Promise<void> {
+  const report = `# Final Answer\n\n## Problem\n${problem}\n\n## Answer\n${extractFinalAnswer(judge)}\n`;
   await mkdir(dirname(path), { recursive: true });
   await writeFile(path, report, "utf8");
 }

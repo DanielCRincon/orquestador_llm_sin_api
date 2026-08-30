@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { parseCliOptions, positiveIntegerFromEnv } from "../input/CliOptions";
-import { buildAnalysisPrompt, buildJudgePrompt } from "../consensus/ConsensusAgent";
+import { buildAnalysisPrompt, buildJudgePrompt, extractFinalAnswer, needsRevision } from "../consensus/ConsensusAgent";
 import { CommandAgent } from "../agents/CommandAgent";
 
 test("parseCliOptions accepts repeated files", () => {
@@ -28,10 +28,18 @@ test("positiveIntegerFromEnv rejects invalid configured values", () => {
 });
 
 test("judge prompt gives both proposals a bounded allocation", () => {
-  const prompt = buildJudgePrompt("p", "c".repeat(300), "A".repeat(300), "B".repeat(300), 1000);
+  const prompt = buildJudgePrompt("p", "c".repeat(300), "A".repeat(300), "B".repeat(300), 1000, false);
   assert.ok(prompt.length <= 1000);
   assert.match(prompt, /PROPUESTA CODEX:\nA/);
   assert.match(prompt, /PROPUESTA CLAUDE:\nB/);
+});
+
+test("consensus helpers request revisions and extract only the final answer", () => {
+  const revision = "## Consensus Status\nREVISE\n\n## Final Answer\nTodavía incompleta.";
+  const final = "## Consensus Status\nFINAL\n\n## Final Answer\nRespuesta única.\n\n## Rationale\nFundamento.";
+  assert.equal(needsRevision(revision), true);
+  assert.equal(needsRevision(final), false);
+  assert.equal(extractFinalAnswer(final), "Respuesta única.");
 });
 
 test("analysis prompt stays within its configured maximum", () => {

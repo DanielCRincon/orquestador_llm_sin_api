@@ -1,6 +1,6 @@
 # Multi-agent orchestrator MVP
 
-CLI local en TypeScript que ejecuta Codex CLI y Claude Code CLI en paralelo, y luego Codex como juez. No usa OpenAI API, Anthropic API ni API keys: los CLIs usan sus sesiones autenticadas localmente.
+CLI local en TypeScript que ejecuta Codex CLI y Claude Code CLI en paralelo, y luego Codex como juez. Si el juez detecta una respuesta vacía o un desacuerdo importante, los agentes reciben su evaluación y realizan una ronda adicional de revisión antes de la decisión final. No usa OpenAI API, Anthropic API ni API keys: los CLIs usan sus sesiones autenticadas localmente.
 
 ## Requisitos
 
@@ -33,6 +33,7 @@ Variables opcionales:
 - `MAX_CONTEXT_CHARS`: entero positivo; por defecto `12000`.
 - `MAX_PROMPT_CHARS`: entero positivo; por defecto `30000`.
 - `MAX_AGENT_OUTPUT_CHARS`: máximo de caracteres capturados por `stdout` o `stderr` de cada agente; por defecto `1000000`.
+- `MAX_CONSENSUS_ROUNDS`: máximo de rondas adicionales de revisión solicitadas por el juez; por defecto `1`.
 
 El juez reparte el presupuesto del prompt entre contexto (25 %) y ambas propuestas, por lo que ninguna propuesta desaparece por un truncamiento global. Las salidas que excedan el límite se marcan como truncadas.
 
@@ -50,6 +51,6 @@ Las pruebas cubren el análisis de argumentos, validación de variables de entor
 
 El proyecto usa resolución de módulos `Node16`, compatible con Node.js 18+ y TypeScript 6; no requiere silenciar advertencias de deprecación.
 
-Las respuestas completas y los metadatos de cada ejecución se guardan en `runs/` para depuración. Cada archivo recibe un UUID para evitar colisiones durante la ejecución paralela. Si no se puede escribir un registro de depuración, se muestra una advertencia y el flujo continúa.
+El informe indicado con `--out` contiene solo la respuesta final del juez. Las respuestas completas de cada agente, las revisiones y los metadatos se guardan en `runs/` para depuración. Cada archivo recibe un UUID para evitar colisiones durante la ejecución paralela. Si un agente devuelve texto vacío, se reintenta una sola vez; si vuelve a ocurrir, la ejecución falla con un diagnóstico.
 
 Si un CLI no está instalado, no está autenticado, termina con error o excede el timeout, el proceso termina con un diagnóstico que distingue entre error de inicio, timeout, señal y código de salida. No se genera un informe parcial, pero Codex y Claude terminan sus intentos en paralelo antes de informar el fallo.
