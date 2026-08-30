@@ -4,13 +4,17 @@
   "private": true,
   "description": "Orquestador local para revisar y proponer ajustes de código ABAP con Codex CLI y Claude Code CLI.",
   "main": "dist/index.js",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
     "test": "npm run build && node --test dist/tests/CliOptions.test.js"
   },
   "devDependencies": {
-    "@types/node": "^22.10.0",
-    "typescript": "^5.7.2"
+    "@types/node": "^22.20.1",
+    "typescript": "^5.9.3"
   }
 }

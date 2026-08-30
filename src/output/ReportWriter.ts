@@ -2,10 +2,11 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { dirname, join } from "node:path";
 import { AgentResult } from "../agents/AgentProvider";
-import { extractFinalAnswer } from "../consensus/ConsensusAgent";
+import { extractFinalAnswer, extractJudgeSection } from "../consensus/ConsensusAgent";
 
 export async function writeReport(path: string, problem: string, judge: string): Promise<void> {
-  const report = `# Final Answer\n\n## Problem\n${problem}\n\n## Answer\n${extractFinalAnswer(judge)}\n`;
+  const section = (name: string) => extractJudgeSection(judge, name) || "No disponible.";
+  const report = `# Revisión ABAP\n\n## Problema\n${problem}\n\n## Respuesta final\n${extractFinalAnswer(judge)}\n\n## Consenso\n${section("Consensus")}\n\n## Desacuerdos relevantes\n${section("Relevant Disagreements")}\n\n## Rationale\n${section("Rationale")}\n\n## Riesgos restantes\n${section("Remaining Risks")}\n\n## Pruebas sugeridas\n${section("Suggested Tests")}\n`;
   await mkdir(dirname(path), { recursive: true });
   await writeFile(path, report, "utf8");
 }

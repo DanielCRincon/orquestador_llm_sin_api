@@ -1,10 +1,11 @@
-import { resolve } from "node:path";
+import { randomInt } from "node:crypto";
+import { basename, resolve } from "node:path";
 import { CodexAgent } from "./agents/CodexAgent";
 import { ClaudeAgent } from "./agents/ClaudeAgent";
 import { AgentProvider, AgentRequest, AgentResult } from "./agents/AgentProvider";
 import { loadContext } from "./input/ContextLoader";
-import { parseCliOptions, positiveIntegerFromEnv } from "./input/CliOptions";
-import { buildAnalysisPrompt, buildJudgePrompt, buildRevisionPrompt, needsRevision, runJudge } from "./consensus/ConsensusAgent";
+import { judgeProviderFromEnv, parseCliOptions, positiveIntegerFromEnv } from "./input/CliOptions";
+import { anonymizeProposals, buildAnalysisPrompt, buildJudgePrompt, buildRevisionPrompt, needsRevision, runJudge } from "./consensus/ConsensusAgent";
 import { writeDebug, writeReport } from "./output/ReportWriter";
 
 const ANALYSIS_INSTRUCTIONS = "Actúa como especialista ABAP senior. Analiza independientemente el requerimiento y el código ABAP proporcionado. Propón el ajuste exacto, incluyendo código ABAP listo para revisar, compatibilidad de release, riesgos y pruebas. No modifiques archivos ni ejecutes comandos. No tienes acceso a otra propuesta.";
@@ -16,10 +17,12 @@ async function main(): Promise<void> {
   const timeoutMs = positiveIntegerFromEnv("AGENT_TIMEOUT_MS", 180000);
   const maxOutputChars = positiveIntegerFromEnv("MAX_AGENT_OUTPUT_CHARS", 1_000_000);
   const maxConsensusRounds = positiveIntegerFromEnv("MAX_CONSENSUS_ROUNDS", 1);
+  const judgeProviderName = judgeProviderFromEnv();
   const context = await loadContext(options.files, maxContext);
   const workingDirectory = process.cwd();
   const codex = new CodexAgent(timeoutMs, maxOutputChars);
   const claude = new ClaudeAgent(timeoutMs, maxOutputChars);
+  const judgeProvider = judgeProviderName === "codex" ? codex : claude;
   const common = { problem: options.problem, context, workingDirectory };
 
   let [codexResult, claudeResult] = await Promise.all([
@@ -29,7 +32,7 @@ async function main(): Promise<void> {
   assertSuccessful(codexResult);
   assertSuccessful(claudeResult);
 
-  let judgeResult = await judge(codex, common, codexResult.stdout, claudeResult.stdout, maxPrompt, maxConsensusRounds === 0, 0);
+  let judgeResult = await judge(judgeProvider, judgeProviderName, common, codexResult.stdout, claudeResult.stdout, maxPrompt, maxConsensusRounds === 0, 0);
   assertSuccessful(judgeResult);
 
   for (let round = 1; round <= maxConsensusRounds && needsRevision(judgeResult.stdout); round += 1) {
@@ -40,19 +43,21 @@ async function main(): Promise<void> {
     ]);
     assertSuccessful(codexResult);
     assertSuccessful(claudeResult);
-    judgeResult = await judge(codex, common, codexResult.stdout, claudeResult.stdout, maxPrompt, round === maxConsensusRounds, round);
+    judgeResult = await judge(judgeProvider, judgeProviderName, common, codexResult.stdout, claudeResult.stdout, maxPrompt, round === maxConsensusRounds, round);
     assertSuccessful(judgeResult);
   }
 
-  await writeReport(resolve(options.output), common.problem, judgeResult.stdout);
-  console.log(`Informe creado: ${resolve(options.output)}`);
+  const outputPath = resolve("reports", basename(options.output));
+  await writeReport(outputPath, common.problem, judgeResult.stdout);
+  console.log(`Informe creado: ${outputPath}`);
 }
 
-async function judge(codex: CodexAgent, common: Omit<AgentRequest, "prompt">, codexAnswer: string, claudeAnswer: string, maxPrompt: number, forceFinal: boolean, round: number): Promise<AgentResult> {
+async function judge(provider: AgentProvider, providerName: string, common: Omit<AgentRequest, "prompt">, firstAnswer: string, secondAnswer: string, maxPrompt: number, forceFinal: boolean, round: number): Promise<AgentResult> {
   const suffix = round === 0 ? "" : ` (ronda ${round})`;
-  return runAgentStep(`juez Codex${suffix}`, { name: "Juez Codex", run: (request) => runJudge(codex, request) }, {
+  const proposals = anonymizeProposals(firstAnswer, secondAnswer, () => randomInt(2));
+  return runAgentStep(`juez ${providerName}${suffix}`, { name: `Juez ${providerName}`, run: (request) => runJudge(provider, request) }, {
     ...common,
-    prompt: buildJudgePrompt(common.problem, common.context, codexAnswer, claudeAnswer, maxPrompt, forceFinal)
+    prompt: buildJudgePrompt(common.problem, common.context, proposals.proposalA, proposals.proposalB, maxPrompt, forceFinal)
   });
 }
 

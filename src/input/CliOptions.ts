@@ -4,6 +4,8 @@ export interface CliOptions {
   output: string;
 }
 
+export type JudgeProviderName = "codex" | "claude";
+
 const usage = 'Uso: npm start -- --problem "..." [--file ruta] [--out report.md]';
 
 export function parseCliOptions(args: string[]): CliOptions {
@@ -44,4 +46,10 @@ export function positiveIntegerFromEnv(name: string, fallback: number): number {
     throw new Error(`${name} debe ser un entero positivo; se recibió ${JSON.stringify(raw)}.`);
   }
   return value;
+}
+
+export function judgeProviderFromEnv(): JudgeProviderName {
+  const value = (process.env.JUDGE_PROVIDER || "codex").toLowerCase();
+  if (value === "codex" || value === "claude") return value;
+  throw new Error(`JUDGE_PROVIDER debe ser "codex" o "claude"; se recibió ${JSON.stringify(value)}.`);
 }

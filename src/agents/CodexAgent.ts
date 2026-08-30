@@ -1,6 +1,6 @@
 import { existsSync, readdirSync } from "node:fs";
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { delimiter, join } from "node:path";
 import { CommandAgent } from "./CommandAgent";
 
 export class CodexAgent extends CommandAgent {
@@ -18,6 +18,9 @@ function resolveCodexCommand(): string {
   if (process.env.CODEX_COMMAND) return process.env.CODEX_COMMAND;
   if (process.platform !== "win32") return "codex";
 
+  const pathCommand = findCodexOnPath();
+  if (pathCommand) return pathCommand;
+
   const extensionsDirectory = join(homedir(), ".vscode", "extensions");
   try {
     const candidates = readdirSync(extensionsDirectory, { withFileTypes: true })
@@ -29,4 +32,16 @@ function resolveCodexCommand(): string {
   } catch {
     return "codex";
   }
+}
+
+function findCodexOnPath(): string | undefined {
+  const pathValue = process.env.PATH || process.env.Path;
+  if (!pathValue) return undefined;
+  for (const directory of pathValue.split(delimiter).filter(Boolean)) {
+    for (const executable of ["codex.exe", "codex.cmd", "codex.bat", "codex"]) {
+      const candidate = join(directory, executable);
+      if (existsSync(candidate)) return candidate;
+    }
+  }
+  return undefined;
 }
