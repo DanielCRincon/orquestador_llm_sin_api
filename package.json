@@ -2,7 +2,7 @@
   "name": "orquestador-llm-sin-api",
   "version": "0.1.0",
   "private": true,
-  "description": "MVP local para analizar problemas con Codex CLI y Claude Code CLI.",
+  "description": "Orquestador local para revisar y proponer ajustes de código ABAP con Codex CLI y Claude Code CLI.",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",

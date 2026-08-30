@@ -1,6 +1,8 @@
-# Multi-agent orchestrator MVP
+# Orquestador de revisión ABAP
 
-CLI local en TypeScript que ejecuta Codex CLI y Claude Code CLI en paralelo, y luego Codex como juez. Si el juez detecta una respuesta vacía o un desacuerdo importante, los agentes reciben su evaluación y realizan una ronda adicional de revisión antes de la decisión final. No usa OpenAI API, Anthropic API ni API keys: los CLIs usan sus sesiones autenticadas localmente.
+CLI local enfocado en código ABAP. Ejecuta Codex CLI y Claude Code CLI en paralelo, y luego Codex como juez. Si el juez detecta una respuesta vacía o un desacuerdo importante, los agentes reciben su evaluación y realizan una ronda adicional de revisión antes de la decisión final. No usa OpenAI API, Anthropic API ni API keys: los CLIs usan sus sesiones autenticadas localmente.
+
+El resultado es una propuesta única de ajuste ABAP, con código listo para revisión. La herramienta no modifica archivos, no se conecta a SAP y no crea transportes: exporta o copia el objeto ABAP a un archivo local antes de analizarlo y luego aplica el cambio mediante tu proceso normal de desarrollo y transporte.
 
 ## Requisitos
 
@@ -15,13 +17,33 @@ El programa no concede herramientas de escritura a los agentes. Codex usa `--san
 ```powershell
 npm install
 npm run build
-npm start -- --problem "Explica cómo corregir este bug de concurrencia" --file .\src\ejemplo.ts
+npm.cmd start -- --problem "Revisa este objeto ABAP y propone el ajuste solicitado." --file .\ZCL_EJEMPLO.abap --out ajuste-abap.md
 ```
 
 También se puede omitir `--file` o repetirlo para varios archivos. El informe se escribe en `report.md` por defecto:
 
 ```powershell
-npm start -- --problem "Revisa este diseño" --file .\src\a.ts --file .\src\b.ts --out resultado.md
+npm.cmd start -- --problem "Revisa la clase ABAP y su programa llamador." --file .\ZCL_EJEMPLO.abap --file .\ZPROGRAMA.abap --out resultado.md
+```
+
+## Solicitar un ajuste ABAP
+
+Guarda o exporta el código desde ADT/SE80 como un archivo `.abap` local. Después describe el resultado esperado, las restricciones relevantes y el formato de respuesta que quieres.
+
+Ejemplo: ajustar un `SELECT` dentro de un método de clase.
+
+```powershell
+npm.cmd run build
+
+npm.cmd start -- --problem "En el método GET_ORDERS reemplaza el SELECT dentro del LOOP por una lectura masiva. Conserva el comportamiento funcional, evita SELECT FOR ALL ENTRIES si la tabla está vacía, usa sintaxis ABAP moderna compatible con S/4HANA y devuelve el bloque de código completo que debo reemplazar. Incluye riesgos y casos de prueba." --file "C:\ABAP\ZCL_ORDER_SERVICE.abap" --out "ajuste-get-orders.md"
+```
+
+Abre `ajuste-get-orders.md`: contiene una única respuesta final del juez, no los borradores de Codex y Claude. Revisa el código, pruébalo en tu sistema de desarrollo ABAP y crea el transporte con tus herramientas SAP habituales.
+
+Para un cambio repartido en varios objetos, repite `--file`:
+
+```powershell
+npm.cmd start -- --problem "Corrige el flujo de validación de pedidos. Devuelve los cambios ABAP por objeto y explica el orden de activación y pruebas." --file "C:\ABAP\ZCL_ORDER_SERVICE.abap" --file "C:\ABAP\ZIF_ORDER_SERVICE.abap" --file "C:\ABAP\ZORDER_REPORT.abap" --out "ajuste-validacion.md"
 ```
 
 ## Configuración y límites

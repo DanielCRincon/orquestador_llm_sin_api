@@ -7,7 +7,7 @@ import { parseCliOptions, positiveIntegerFromEnv } from "./input/CliOptions";
 import { buildAnalysisPrompt, buildJudgePrompt, buildRevisionPrompt, needsRevision, runJudge } from "./consensus/ConsensusAgent";
 import { writeDebug, writeReport } from "./output/ReportWriter";
 
-const ANALYSIS_INSTRUCTIONS = "Analiza independientemente el problema. Propón solución, riesgos y pruebas. No modifiques archivos ni ejecutes comandos. No tienes acceso a otra propuesta.";
+const ANALYSIS_INSTRUCTIONS = "Actúa como especialista ABAP senior. Analiza independientemente el requerimiento y el código ABAP proporcionado. Propón el ajuste exacto, incluyendo código ABAP listo para revisar, compatibilidad de release, riesgos y pruebas. No modifiques archivos ni ejecutes comandos. No tienes acceso a otra propuesta.";
 
 async function main(): Promise<void> {
   const options = parseCliOptions(process.argv.slice(2));
