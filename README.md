@@ -46,4 +46,6 @@ npm test
 
 Las pruebas cubren el análisis de argumentos, validación de variables de entorno y presupuestos de prompts.
 
+El proyecto usa resolución de módulos `Node16`, compatible con Node.js 18+ y TypeScript 6; no requiere silenciar advertencias de deprecación.
+
 Las respuestas completas y los metadatos de cada ejecución se guardan en `runs/` para depuración. Si un CLI no está instalado, no está autenticado, termina con error o excede el timeout, el proceso termina con un mensaje accionable y no genera un informe parcial.
