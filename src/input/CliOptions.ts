@@ -32,8 +32,8 @@ export function parseCliOptions(args: string[]): CliOptions {
       hasOutput = true;
     }
   }
-  if (!problem) throw new Error(usage);
-  return { problem, files, output };
+  if (!problem || !problem.trim()) throw new Error(`--problem no puede estar vacío. ${usage}`);
+  return { problem: problem.trim(), files, output };
 }
 
 export function positiveIntegerFromEnv(name: string, fallback: number): number {

@@ -1,6 +1,6 @@
 # Multi-agent orchestrator MVP
 
-CLI local en TypeScript que ejecuta, en orden, Codex CLI, Claude Code CLI y Codex como juez. No usa OpenAI API, Anthropic API ni API keys: los CLIs usan sus sesiones autenticadas localmente.
+CLI local en TypeScript que ejecuta Codex CLI y Claude Code CLI en paralelo, y luego Codex como juez. No usa OpenAI API, Anthropic API ni API keys: los CLIs usan sus sesiones autenticadas localmente.
 
 ## Requisitos
 
@@ -50,4 +50,6 @@ Las pruebas cubren el análisis de argumentos, validación de variables de entor
 
 El proyecto usa resolución de módulos `Node16`, compatible con Node.js 18+ y TypeScript 6; no requiere silenciar advertencias de deprecación.
 
-Las respuestas completas y los metadatos de cada ejecución se guardan en `runs/` para depuración. Si un CLI no está instalado, no está autenticado, termina con error o excede el timeout, el proceso termina con un mensaje accionable y no genera un informe parcial.
+Las respuestas completas y los metadatos de cada ejecución se guardan en `runs/` para depuración. Cada archivo recibe un UUID para evitar colisiones durante la ejecución paralela. Si no se puede escribir un registro de depuración, se muestra una advertencia y el flujo continúa.
+
+Si un CLI no está instalado, no está autenticado, termina con error o excede el timeout, el proceso termina con un diagnóstico que distingue entre error de inicio, timeout, señal y código de salida. No se genera un informe parcial, pero Codex y Claude terminan sus intentos en paralelo antes de informar el fallo.

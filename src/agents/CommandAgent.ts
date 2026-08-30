@@ -13,7 +13,7 @@ export class CommandAgent implements AgentProvider {
 
   run(request: AgentRequest): Promise<AgentResult> {
     const started = Date.now();
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const command = this.commandLine();
       const child = spawn(command.file, command.args, {
         cwd: request.workingDirectory,
@@ -40,7 +40,7 @@ export class CommandAgent implements AgentProvider {
         } else {
           child.kill("SIGTERM");
         }
-        graceTimer = setTimeout(() => finish({ agent: this.name, stdout, stderr, exitCode: null, durationMs: 0 }), 5000);
+        graceTimer = setTimeout(() => finish({ agent: this.name, stdout, stderr, exitCode: null, durationMs: 0, timedOut: true, signal: null }), 5000);
       }, this.options.timeoutMs);
 
       child.stdout.on("data", (chunk: Buffer) => { stdout = appendLimited(stdout, chunk.toString(), this.options.maxOutputChars); });
@@ -48,12 +48,12 @@ export class CommandAgent implements AgentProvider {
       child.on("error", (error) => {
         clearTimeout(timer);
         if (graceTimer) clearTimeout(graceTimer);
-        if (!settled) reject(new Error(`${this.name} no pudo iniciarse: ${error.message}`));
+        finish({ agent: this.name, stdout, stderr, exitCode: null, durationMs: 0, timedOut: false, signal: null, startError: error.message });
       });
-      child.on("close", (exitCode) => {
+      child.on("close", (exitCode, signal) => {
         clearTimeout(timer);
         if (graceTimer) clearTimeout(graceTimer);
-        finish({ agent: this.name, stdout, stderr, exitCode: timedOut ? null : exitCode, durationMs: 0 });
+        finish({ agent: this.name, stdout, stderr, exitCode: timedOut ? null : exitCode, durationMs: 0, timedOut, signal });
       });
       child.stdin.end(request.prompt);
     });

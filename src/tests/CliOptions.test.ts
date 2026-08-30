@@ -13,6 +13,7 @@ test("parseCliOptions accepts repeated files", () => {
 test("parseCliOptions rejects unknown and incomplete options", () => {
   assert.throws(() => parseCliOptions(["--problem", "x", "--wat"]), /Falta un valor|no reconocida/);
   assert.throws(() => parseCliOptions(["--file", "x.ts"]), /Uso:/);
+  assert.throws(() => parseCliOptions(["--problem", "   "]), /no puede estar vacío/);
   assert.throws(() => parseCliOptions(["--problem", "x", "--out", "report.md", "--out", "other.md"]), /solo puede/);
 });
 

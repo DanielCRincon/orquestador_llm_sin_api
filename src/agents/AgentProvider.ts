@@ -11,6 +11,9 @@ export interface AgentResult {
   stderr: string;
   exitCode: number | null;
   durationMs: number;
+  timedOut: boolean;
+  signal: NodeJS.Signals | null;
+  startError?: string;
 }
 
 export interface AgentProvider {

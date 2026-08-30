@@ -1,10 +1,13 @@
 import { resolve } from "node:path";
 import { CodexAgent } from "./agents/CodexAgent";
 import { ClaudeAgent } from "./agents/ClaudeAgent";
+import { AgentProvider, AgentRequest, AgentResult } from "./agents/AgentProvider";
 import { loadContext } from "./input/ContextLoader";
 import { parseCliOptions, positiveIntegerFromEnv } from "./input/CliOptions";
 import { buildAnalysisPrompt, buildJudgePrompt, runJudge } from "./consensus/ConsensusAgent";
 import { writeDebug, writeReport } from "./output/ReportWriter";
+
+const ANALYSIS_INSTRUCTIONS = "Analiza independientemente el problema. Propón solución, riesgos y pruebas. No modifiques archivos ni ejecutes comandos. No tienes acceso a otra propuesta.";
 
 async function main(): Promise<void> {
   const options = parseCliOptions(process.argv.slice(2));
@@ -18,23 +21,44 @@ async function main(): Promise<void> {
   const claude = new ClaudeAgent(timeoutMs, maxOutputChars);
   const common = { problem: options.problem, context, workingDirectory };
 
-  console.log("Ejecutando Codex...");
-  const codexResult = await codex.run({ ...common, prompt: buildAnalysisPrompt("Analiza independientemente el problema. Propón solución, riesgos y pruebas. No modifiques archivos ni ejecutes comandos.", common.problem, context, maxPrompt) });
-  await writeDebug(resolve("runs"), codexResult);
-  if (codexResult.exitCode !== 0) throw new Error(`Codex terminó con exit code ${codexResult.exitCode}: ${codexResult.stderr}`);
+  const [codexResult, claudeResult] = await Promise.all([
+    runAgentStep("Codex", codex, { ...common, prompt: buildAnalysisPrompt(ANALYSIS_INSTRUCTIONS, common.problem, context, maxPrompt) }),
+    runAgentStep("Claude", claude, { ...common, prompt: buildAnalysisPrompt(ANALYSIS_INSTRUCTIONS, common.problem, context, maxPrompt) })
+  ]);
+  assertSuccessful(codexResult);
+  assertSuccessful(claudeResult);
 
-  console.log("Ejecutando Claude...");
-  const claudeResult = await claude.run({ ...common, prompt: buildAnalysisPrompt("Analiza independientemente el problema. Propón solución, riesgos y pruebas. No modifiques archivos ni ejecutes comandos. No tienes acceso a otra propuesta.", common.problem, context, maxPrompt) });
-  await writeDebug(resolve("runs"), claudeResult);
-  if (claudeResult.exitCode !== 0) throw new Error(`Claude terminó con exit code ${claudeResult.exitCode}: ${claudeResult.stderr}`);
-
-  console.log("Ejecutando juez Codex...");
-  const judgeResult = await runJudge(codex, { ...common, prompt: buildJudgePrompt(common.problem, context, codexResult.stdout, claudeResult.stdout, maxPrompt) });
-  await writeDebug(resolve("runs"), judgeResult);
-  if (judgeResult.exitCode !== 0) throw new Error(`Juez Codex terminó con exit code ${judgeResult.exitCode}: ${judgeResult.stderr}`);
+  const judgeResult = await runAgentStep("juez Codex", { name: "Juez Codex", run: (request) => runJudge(codex, request) }, { ...common, prompt: buildJudgePrompt(common.problem, context, codexResult.stdout, claudeResult.stdout, maxPrompt) });
+  assertSuccessful(judgeResult);
 
   await writeReport(resolve(options.output), common.problem, codexResult.stdout, claudeResult.stdout, judgeResult.stdout);
   console.log(`Informe creado: ${resolve(options.output)}`);
+}
+
+async function runAgentStep(label: string, agent: AgentProvider, request: AgentRequest): Promise<AgentResult> {
+  console.log(`Ejecutando ${label}...`);
+  const rawResult = await agent.run(request);
+  const result = rawResult.agent === label ? rawResult : { ...rawResult, agent: label };
+  try {
+    await writeDebug(resolve("runs"), result);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn(`No se pudo guardar el registro de ${label}: ${message}`);
+  }
+  return result;
+}
+
+function assertSuccessful(result: AgentResult): void {
+  if (result.exitCode === 0) return;
+  const reason = result.startError
+    ? `no pudo iniciarse (${result.startError})`
+    : result.timedOut
+      ? "excedió el tiempo límite"
+      : result.signal
+        ? `terminó por señal ${result.signal}`
+        : `terminó con exit code ${result.exitCode}`;
+  const details = result.stderr.trim();
+  throw new Error(`${result.agent} ${reason}.${details ? ` ${details}` : ""}`);
 }
 
 main().catch((error: unknown) => { console.error(error instanceof Error ? error.message : error); process.exitCode = 1; });

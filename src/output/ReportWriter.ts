@@ -1,5 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
-import { dirname } from "node:path";
+import { randomUUID } from "node:crypto";
+import { dirname, join } from "node:path";
 import { AgentResult } from "../agents/AgentProvider";
 
 export async function writeReport(path: string, problem: string, codex: string, claude: string, judge: string): Promise<void> {
@@ -10,5 +11,5 @@ export async function writeReport(path: string, problem: string, codex: string, 
 
 export async function writeDebug(directory: string, result: AgentResult): Promise<void> {
   await mkdir(directory, { recursive: true });
-  await writeFile(`${directory}/${result.agent.toLowerCase()}-${Date.now()}.json`, JSON.stringify(result, null, 2), "utf8");
+  await writeFile(join(directory, `${result.agent.toLowerCase()}-${Date.now()}-${randomUUID()}.json`), JSON.stringify(result, null, 2), "utf8");
 }
