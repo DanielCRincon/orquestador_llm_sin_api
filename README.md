@@ -31,6 +31,8 @@ El resultado queda en `reports\ajuste-get-orders.md`.
 
 Si PowerShell bloquea `npm.ps1`, utiliza `npm.cmd` como en los ejemplos o ejecuta `Set-ExecutionPolicy -Scope Process Bypass` solo en la ventana actual.
 
+Para el paso a paso completo de uso local con archivos ABAP, consulta [GUIA_LOCAL.md](GUIA_LOCAL.md).
+
 ## How it works
 
 ```mermaid
